@@ -1,0 +1,18 @@
+/* Tamaños y contraste para lectura sostenida de resultados. */
+.advanced-toggle{display:none}
+.filter-panel label,.date-fields legend{font-size:12px}
+.filter-panel input,.filter-panel select{font-size:12px}
+.metric p{font-size:12px}.metric span{font-size:11px;color:#677b62}
+.context-note{font-size:12px;color:#657965}
+.card-title h3{font-size:13px}.entities-card li{font-size:10px}.entity-rank{font-size:9px}
+th{font-size:11px;color:#61765b}
+td,.record-link,.description{font-size:12px}
+.entity-name,.object-label{font-size:10px;color:#6e8065}
+.date-cell{font-size:11px;color:#718264}
+.amount-cell{font-size:12px}.amount-cell span{font-size:10px;color:#7c8e6e}
+.badge{font-size:9px}.filter-footnote p{font-size:11px;color:#708367}
+.results-toolbar p,.pagination{font-size:11px;color:#718361}
+.email-strip h3{font-size:12px}.email-strip p{font-size:11px;color:#718661}
+@media(max-width:900px){.metric p{font-size:10px}.metric span{font-size:9px}}
+@media(max-width:680px){.advanced-toggle{display:flex;grid-column:1/-1;justify-content:space-between;font-size:12px;margin:15px 0 16px;padding:0;color:#456b55}.filter-panel:not(.show-advanced) #filters>label[for="entity"],.filter-panel:not(.show-advanced) #entity,.filter-panel:not(.show-advanced) .field-pair,.filter-panel:not(.show-advanced) #filters>label[for="object"],.filter-panel:not(.show-advanced) #object,.filter-panel:not(.show-advanced) #filters>label[for="medical"],.filter-panel:not(.show-advanced) #medical,.filter-panel:not(.show-advanced) #filters>label[for="category"],.filter-panel:not(.show-advanced) #category,.filter-panel:not(.show-advanced) .date-fields{display:none}}
+@media(max-width:680px){.context-note{font-size:11px}.filter-panel label,.date-fields legend{font-size:12px}.metric p{font-size:10px}.metric span{font-size:9px}.entity-name,.object-label{font-size:10px}.description,.date-cell{font-size:12px}.badge{font-size:10px}.amount-cell{font-size:12px}.pagination{font-size:10px}}

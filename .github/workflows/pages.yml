@@ -1,0 +1,55 @@
+name: Frontend CI y GitHub Pages
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Navegador para pruebas
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Verificar API para publicación
+        if: github.event_name != 'pull_request' && vars.API_BASE_URL != ''
+        env:
+          API_URL: ${{ vars.API_BASE_URL }}
+        run: node -e "const u=new URL(process.env.API_URL); if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash) throw Error('Configura la variable API_BASE_URL con la URL HTTPS pública del backend')"
+      - name: Informar configuración pendiente
+        if: github.event_name != 'pull_request' && vars.API_BASE_URL == ''
+        run: echo '::notice::API_BASE_URL pendiente. Se ejecutan las pruebas y la compilación; Pages se publicará cuando configures esa variable y habilites GitHub Actions en Settings > Pages.'
+      - name: Compilar
+        env:
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || 'http://127.0.0.1:8000' }}
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v5.0.0
+        if: github.event_name != 'pull_request' && vars.API_BASE_URL != ''
+        with:
+          path: dist
+  deploy:
+    if: github.event_name != 'pull_request' && vars.API_BASE_URL != ''
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publicar
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1
