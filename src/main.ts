@@ -25,6 +25,10 @@ let filters: Filters = { ...DEFAULT_FILTERS };
 let metadata: Metadata | null = null;
 let currentPage: Page | null = null;
 let request: AbortController | null = null;
+let refreshInProgress = false;
+let statusInProgress = false;
+let pollInProgress = false;
+let lastDataRead: string | null = null;
 let toastTimer: ReturnType<typeof setTimeout>;
 
 el('#app').innerHTML = `
@@ -56,6 +60,7 @@ el('#app').innerHTML = `
         <div class="content-column" id="resultados" tabindex="-1">
           <div class="content-heading"><div><p class="eyebrow dark">EXPLORA CON CRITERIO</p><h2 id="dataset-title">Oportunidades recientes</h2></div><button id="refresh" class="button outline small">${icon('refresh')} Actualizar</button></div>
           <p id="dataset-note" class="context-note">Publicaciones detectadas en el buscador de SEACE. Su vigencia se confirma en la fuente oficial.</p>
+          <p id="data-sync" class="context-note" role="status" hidden></p>
           <div id="error-state" class="error-state" role="alert" hidden></div>
           <div id="loading" class="loading" role="status"><span class="spinner"></span><span>Consultando oportunidades…<br><span class="quiet">El primer acceso puede tardar cerca de un minuto.</span></span></div>
           <div id="dashboard" hidden>
@@ -112,26 +117,45 @@ function renderPage(page: Page) {
   el<HTMLButtonElement>('#export').disabled = !page.total;
   el('#records').querySelectorAll<HTMLButtonElement>('[data-record]').forEach(button => { button.onclick = () => void openRecord(button.dataset.record!); });
 }
-async function refresh() {
-  request?.abort(); request = new AbortController();
-  const signal = request.signal;
+async function refresh(background = false) {
+  if (background && (refreshInProgress || !currentPage || filters.dataset !== 'recientes' || filters.page !== 1 || el<HTMLDialogElement>('#dialog').open)) return;
   el('#filter-error').hidden = true;
   const error = validateDates(filters);
   if (error) { el('#filter-error').textContent = error; el('#filter-error').hidden = false; return; }
-  el('#error-state').hidden = true; el('#loading').hidden = false; el('#dashboard').hidden = true;
-  el<HTMLButtonElement>('#refresh').disabled = true;
+  request?.abort();
+  const activeRequest = new AbortController();
+  request = activeRequest;
+  const signal = activeRequest.signal;
+  refreshInProgress = true;
+  if (!background) {
+    el('#error-state').hidden = true; el('#loading').hidden = false; el('#dashboard').hidden = true;
+    el<HTMLButtonElement>('#refresh').disabled = true;
+  }
   try {
     const params = queryParams(filters);
     const [page, summary] = await Promise.all([api<Page>(`/api/v1/records?${params}`, signal), api<Summary>(`/api/v1/summary?${params}`, signal)]);
     if (signal.aborted) return;
     renderSummary(summary); renderPage(page); el('#dashboard').hidden = false;
+    el('#error-state').hidden = true;
+    lastDataRead = new Date().toISOString();
+    el('#data-sync').textContent = `Datos consultados: ${dateTime(lastDataRead)}${filters.dataset === 'recientes' && filters.page === 1 ? ' · Actualización automática cada minuto.' : ''}`;
+    el('#data-sync').hidden = false;
   } catch (error) {
     if (signal.aborted) return;
+    if (background) {
+      el('#data-sync').textContent = `No pudimos actualizar ahora. Conservamos los resultados${lastDataRead ? ` de ${dateTime(lastDataRead)}` : ''}.`;
+      el('#data-sync').hidden = false;
+      return;
+    }
     el('#error-state').innerHTML = `<h3>${API_BASE ? 'No pudimos cargar la información' : 'Conexión con datos en preparación'}</h3><p>${e(error instanceof Error ? error.message : 'Error inesperado.')}</p>${API_BASE ? '<button class="button outline" id="retry">Volver a intentar</button>' : '<p>Puedes conocer la interfaz mientras se completa la puesta en marcha. No se muestran datos simulados.</p>'}`;
     el('#error-state').hidden = false;
     if (API_BASE) el('#retry').onclick = () => void refresh();
   } finally {
-    if (!signal.aborted) { el('#loading').hidden = true; el<HTMLButtonElement>('#refresh').disabled = false; }
+    if (request === activeRequest) {
+      refreshInProgress = false;
+      el('#loading').hidden = true;
+      el<HTMLButtonElement>('#refresh').disabled = false;
+    }
   }
 }
 function syncForm() {
@@ -221,12 +245,16 @@ el('#help-open').onclick = () => showDialog(`<h2 id="dialog-title">Encuentra. Re
 
 let lastStatus: CollectorStatus | null = null;
 async function loadStatus() {
+  if (statusInProgress) return;
+  statusInProgress = true;
   try {
     lastStatus = await api<CollectorStatus>('/api/v1/collector/status');
     const errors = Object.values(lastStatus.objects).some(state => !!state.ultimo_error);
     el('#worker-dot').className = `status-dot ${lastStatus.worker_online && !errors ? '' : 'neutral'}`;
-    el('#worker-label').textContent = !lastStatus.worker_online ? 'Seguimiento sin actividad reciente' : errors ? 'Seguimiento con incidencias' : 'Seguimiento activo';
+    el('#worker-label').textContent = !lastStatus.worker_online ? 'Seguimiento sin actividad reciente' : errors ? 'Seguimiento con incidencias' : lastStatus.runtime.running ? 'Revisando SEACE' : `Seguimiento activo · cada ${Math.round(lastStatus.interval_seconds / 60)} min`;
+    el('#coverage-open').title = lastStatus.note;
   } catch { el('#worker-label').textContent = 'Estado no disponible'; el('#worker-dot').className = 'status-dot neutral'; }
+  finally { statusInProgress = false; }
 }
 function coverageDialog() {
   const history = metadata?.coverage.historico;
@@ -253,4 +281,14 @@ async function init() {
   if (ident && /^[a-zA-Z0-9_:-]{1,100}$/.test(ident)) await openRecord(ident);
 }
 void init();
-setInterval(() => { if (!document.hidden && !configurationError()) void loadStatus(); }, 60000);
+async function pollUpdates() {
+  if (document.hidden || configurationError() || pollInProgress) return;
+  pollInProgress = true;
+  try {
+    await loadStatus();
+    if (!document.hidden) await refresh(true);
+  } finally { pollInProgress = false; }
+}
+setInterval(() => { void pollUpdates(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) void pollUpdates(); });
+window.addEventListener('online', () => { void pollUpdates(); });

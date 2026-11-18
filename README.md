@@ -6,6 +6,8 @@ Página de consulta de oportunidades médicas de SEACE. TypeScript estricto + Vi
 
 Incluye búsqueda por texto/entidad, año, objeto, categoría y fecha; separación entre publicaciones recientes e histórico; indicadores; paginación; detalle con enlace oficial; exportación CSV y cinco búsquedas guardadas en el navegador. El enlace `?registro=IDENTIFICADOR` permite abrir desde un correo el detalle de una publicación. Los avisos por correo se configuran en el backend mediante TI.
 
+Con la pestaña visible, la primera página de convocatorias recientes consulta datos nuevos cada **60 segundos**, conservando los filtros y los resultados mientras espera. Las consultas automáticas se pausan al ocultar la pestaña o abrir un detalle, y se retoman al regresar. El histórico y otras páginas se actualizan manualmente. Si falla una consulta automática, se conserva la información anterior y se avisa junto a su hora de consulta. La frecuencia de lectura de SEACE depende del worker, configurado por separado cada 300 segundos.
+
 La página no contiene la base de datos ni el HTML histórico de 206 MB. Solo descarga resultados y resúmenes de la selección actual. No presenta datos simulados si la API falta: muestra el error de configuración o conexión.
 
 ## Ejecutar en local

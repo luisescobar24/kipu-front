@@ -63,3 +63,50 @@ test('abre el enlace que llegaría por correo', async ({ page }) => {
   await expect(page.getByRole('dialog')).toBeVisible();
   await expect(page.getByRole('heading', { name: record.nomenclature })).toBeVisible();
 });
+
+test('renueva los resultados con los filtros y retoma al volver a la pestaña', async ({ page }) => {
+  await page.clock.install();
+  let name = record.nomenclature;
+  let query = '';
+  let requests = 0;
+  await page.route('**/api/v1/records?**', route => {
+    requests++;
+    query = new URL(route.request().url()).searchParams.get('q') || '';
+    return route.fulfill({ json: { items: [{ ...record, nomenclature: name }], total: 1, page: 1, page_size: 20, unit: 'publicaciones' } });
+  });
+  await page.goto('/');
+  await expect(page.locator('#dashboard')).toBeVisible();
+  await page.getByLabel('Producto o palabra clave').fill('jeringas');
+  await page.getByRole('button', { name: 'Buscar oportunidades', exact: true }).click();
+  await expect.poll(() => query).toBe('jeringas');
+  name = 'LP-NUEVA-LECTURA';
+  await page.clock.fastForward(61000);
+  await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
+  await expect(page.getByLabel('Producto o palabra clave')).toHaveValue('jeringas');
+  await expect(page.locator('#data-sync')).toContainText('Actualización automática cada minuto');
+  await expect(page.locator('#loading')).toBeHidden();
+  const before = requests;
+  await page.evaluate(() => Object.defineProperty(document, 'hidden', { get: () => true, configurable: true }));
+  name = 'LP-AL-VOLVER';
+  await page.clock.fastForward(61000);
+  expect(requests).toBe(before);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.getByRole('button', { name, exact: true })).toBeVisible();
+  expect(query).toBe('jeringas');
+});
+
+test('conserva los resultados cuando falla una actualización automática', async ({ page }) => {
+  await page.clock.install();
+  await page.goto('/');
+  await expect(page.locator('#dashboard')).toBeVisible();
+  await page.route('**/api/v1/records?**', route => route.abort());
+  await page.clock.fastForward(61000);
+  await expect(page.locator('#data-sync')).toContainText('Conservamos los resultados');
+  await expect(page.locator('#dashboard')).toBeVisible();
+  await expect(page.getByRole('button', { name: record.nomenclature, exact: true })).toBeVisible();
+  await expect(page.locator('#error-state')).toBeHidden();
+  await expect(page.locator('#loading')).toBeHidden();
+});
