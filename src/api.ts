@@ -3,6 +3,8 @@ import type { Filters } from './types';
 
 const configuredUrl = import.meta.env.VITE_API_BASE_URL?.trim() || '';
 export const API_BASE = configuredUrl.replace(/\/+$/, '');
+// El primer acceso a una instancia gratuita puede requerir que el servidor arranque.
+const REQUEST_TIMEOUT_MS = 90000;
 export class ApiError extends Error {
   constructor(message: string, public status = 0) { super(message); }
 }
@@ -20,7 +22,7 @@ export async function api<T>(path: string, signal?: AbortSignal): Promise<T> {
   if (error) throw new ApiError(error);
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(20000)]) : AbortSignal.timeout(20000), headers: { Accept: 'application/json' } });
+    response = await fetch(`${API_BASE}${path}`, { signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]) : AbortSignal.timeout(REQUEST_TIMEOUT_MS), headers: { Accept: 'application/json' } });
   } catch (error) {
     if (signal?.aborted) throw error;
     throw new ApiError('No pudimos conectar con la API. Comprueba tu conexión y vuelve a intentar.');
@@ -32,7 +34,7 @@ export async function api<T>(path: string, signal?: AbortSignal): Promise<T> {
   return response.json() as Promise<T>;
 }
 export async function downloadCsv(filters: Filters): Promise<void> {
-  const response = await fetch(`${API_BASE}/api/v1/records/export.csv?${queryParams(filters)}`, { signal: AbortSignal.timeout(30000) });
+  const response = await fetch(`${API_BASE}/api/v1/records/export.csv?${queryParams(filters)}`, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new ApiError(body.detail || 'No se pudo exportar. Intenta reducir los filtros.');

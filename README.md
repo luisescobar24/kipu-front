@@ -1,6 +1,6 @@
 # Kipu Front
 
-Cuenta de destino del proyecto: **luisescobar24**. Repositorios: [frontend](https://github.com/luisescobar24/kipu-front) y [backend](https://github.com/luisescobar24/kipu-back). Dirección prevista de Pages: <https://luisescobar24.github.io/kipu-front/>. La transferencia debe estar aceptada por la cuenta de destino y el workflow debe publicar antes de que esa dirección esté disponible.
+Propietario del proyecto: **luisescobar24**. Repositorios: [frontend](https://github.com/luisescobar24/kipu-front) y [backend](https://github.com/luisescobar24/kipu-back). Página: <https://luisescobar24.github.io/kipu-front/>. API en Render: <https://kipu-back.onrender.com>. El workflow de Pages debe terminar correctamente para publicar cada actualización de la interfaz y su configuración.
 
 Página de consulta de oportunidades médicas de SEACE. TypeScript estricto + Vite, HTML semántico y CSS adaptable a escritorio y móvil. Consulta el proyecto separado `C:\Users\luise\Desktop\Kipu Back` por API HTTP.
 
@@ -38,11 +38,13 @@ npm.cmd run test:e2e
 ## Publicar en GitHub Pages
 
 1. Subir **el contenido de esta carpeta** a un repositorio `kipu-front`. Con GitHub Free, usar un repositorio público para Pages. El backend va a otro repositorio y a un servidor con Python/Docker.
-2. Desplegar primero la API con HTTPS. En GitHub, ir a **Settings → Secrets and variables → Actions → Variables** y crear `API_BASE_URL`, por ejemplo `https://api.tudominio.com`. Es una variable, no un secreto, porque el navegador necesita conocerla.
+2. Desplegar primero la API con HTTPS. En GitHub, ir a **Settings → Secrets and variables → Actions → Variables** y crear `API_BASE_URL` con la URL del servicio. En esta instalación se configuró `https://kipu-back.onrender.com`. Es una variable, no un secreto, porque el navegador necesita conocerla.
 3. En **Settings → Pages → Build and deployment → Source**, seleccionar **GitHub Actions**.
 4. El workflow `.github/workflows/pages.yml` ejecuta tests y compila al subir a `main` o ejecutarlo manualmente. Con `API_BASE_URL` configurada, también comprueba HTTPS y publica. Mientras falte esa variable, deja un aviso y omite la publicación automática. Para revisar únicamente la interfaz en línea, se puede ejecutar manualmente con `publish_preview=true`: publica un aviso explícito de conexión pendiente y no carga datos simulados ni consulta localhost. Las PR solo validan.
 5. En el backend configurar `CORS_ORIGINS=["https://TU_USUARIO.github.io"]` y `FRONTEND_URL=https://TU_USUARIO.github.io/kipu-front/`. El primero no lleva la ruta; el segundo sí.
 6. Verificar en la URL final: búsqueda, filtros, detalle, exportación y un enlace con `?registro=...`. Revisar «Fuentes y cobertura» antes de usar los conteos.
+
+Render Free puede tardar más de 50 segundos en atender el primer acceso después de un período de inactividad. El frontend permite hasta 90 segundos por petición y muestra un aviso durante la carga. Esto no mantiene activo al recolector: la lectura periódica de SEACE requiere un proceso separado.
 
 ```powershell
 # Después del primer push, ambos proyectos tienen su remoto origin en GitHub.

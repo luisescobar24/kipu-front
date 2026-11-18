@@ -57,7 +57,7 @@ el('#app').innerHTML = `
           <div class="content-heading"><div><p class="eyebrow dark">EXPLORA CON CRITERIO</p><h2 id="dataset-title">Oportunidades recientes</h2></div><button id="refresh" class="button outline small">${icon('refresh')} Actualizar</button></div>
           <p id="dataset-note" class="context-note">Publicaciones detectadas en el buscador de SEACE. Su vigencia se confirma en la fuente oficial.</p>
           <div id="error-state" class="error-state" role="alert" hidden></div>
-          <div id="loading" class="loading" role="status"><span class="spinner"></span> Consultando oportunidades…</div>
+          <div id="loading" class="loading" role="status"><span class="spinner"></span><span>Consultando oportunidades…<br><span class="quiet">El primer acceso puede tardar cerca de un minuto.</span></span></div>
           <div id="dashboard" hidden>
             <section class="metrics" aria-label="Resumen de la selección" id="metrics"></section>
             <div class="insight-grid"><section class="card chart-card"><div class="card-title"><h3 id="chart-title">Actividad por mes</h3><span class="mini-label">SELECCIÓN ACTUAL</span></div><div id="chart"></div></section><section class="card entities-card"><div class="card-title"><h3>Entidades con más publicaciones</h3></div><ol id="top-entities"></ol></section></div>
