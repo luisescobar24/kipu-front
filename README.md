@@ -1,5 +1,7 @@
 # Kipu Front
 
+Cuenta de destino del proyecto: **luisescobar24**. Repositorios: [frontend](https://github.com/luisescobar24/kipu-front) y [backend](https://github.com/luisescobar24/kipu-back). Dirección prevista de Pages: <https://luisescobar24.github.io/kipu-front/>. La transferencia debe estar aceptada por la cuenta de destino y el workflow debe publicar antes de que esa dirección esté disponible.
+
 Página de consulta de oportunidades médicas de SEACE. TypeScript estricto + Vite, HTML semántico y CSS adaptable a escritorio y móvil. Consulta el proyecto separado `C:\Users\luise\Desktop\Kipu Back` por API HTTP.
 
 Incluye búsqueda por texto/entidad, año, objeto, categoría y fecha; separación entre publicaciones recientes e histórico; indicadores; paginación; detalle con enlace oficial; exportación CSV y cinco búsquedas guardadas en el navegador. El enlace `?registro=IDENTIFICADOR` permite abrir desde un correo el detalle de una publicación. Los avisos por correo se configuran en el backend mediante TI.
