@@ -7,7 +7,7 @@ export class ApiError extends Error {
   constructor(message: string, public status = 0) { super(message); }
 }
 export function configurationError(): string | null {
-  if (!API_BASE) return 'Falta configurar la dirección de la API. TI debe definir VITE_API_BASE_URL y volver a publicar la página.';
+  if (!API_BASE) return 'La conexión con las convocatorias está en preparación. Las búsquedas estarán disponibles al completar la conexión con el servidor.';
   try {
     const url = new URL(API_BASE);
     if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) throw new Error();

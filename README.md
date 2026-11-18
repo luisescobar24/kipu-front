@@ -38,7 +38,7 @@ npm.cmd run test:e2e
 1. Subir **el contenido de esta carpeta** a un repositorio `kipu-front`. Con GitHub Free, usar un repositorio público para Pages. El backend va a otro repositorio y a un servidor con Python/Docker.
 2. Desplegar primero la API con HTTPS. En GitHub, ir a **Settings → Secrets and variables → Actions → Variables** y crear `API_BASE_URL`, por ejemplo `https://api.tudominio.com`. Es una variable, no un secreto, porque el navegador necesita conocerla.
 3. En **Settings → Pages → Build and deployment → Source**, seleccionar **GitHub Actions**.
-4. El workflow `.github/workflows/pages.yml` ejecuta tests y compila al subir a `main` o ejecutarlo manualmente. Con `API_BASE_URL` configurada, también comprueba HTTPS y publica. Mientras falte esa variable, deja un aviso y omite la publicación. Las PR solo validan.
+4. El workflow `.github/workflows/pages.yml` ejecuta tests y compila al subir a `main` o ejecutarlo manualmente. Con `API_BASE_URL` configurada, también comprueba HTTPS y publica. Mientras falte esa variable, deja un aviso y omite la publicación automática. Para revisar únicamente la interfaz en línea, se puede ejecutar manualmente con `publish_preview=true`: publica un aviso explícito de conexión pendiente y no carga datos simulados ni consulta localhost. Las PR solo validan.
 5. En el backend configurar `CORS_ORIGINS=["https://TU_USUARIO.github.io"]` y `FRONTEND_URL=https://TU_USUARIO.github.io/kipu-front/`. El primero no lleva la ruta; el segundo sí.
 6. Verificar en la URL final: búsqueda, filtros, detalle, exportación y un enlace con `?registro=...`. Revisar «Fuentes y cobertura» antes de usar los conteos.
 

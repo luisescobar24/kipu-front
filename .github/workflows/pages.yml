@@ -4,6 +4,12 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish_preview:
+        description: Publicar la interfaz con un aviso si la API todavía está pendiente
+        type: boolean
+        default: false
+        required: false
 permissions:
   contents: read
 concurrency:
@@ -30,17 +36,17 @@ jobs:
         run: node -e "const u=new URL(process.env.API_URL); if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash) throw Error('Configura la variable API_BASE_URL con la URL HTTPS pública del backend')"
       - name: Informar configuración pendiente
         if: github.event_name != 'pull_request' && vars.API_BASE_URL == ''
-        run: echo '::notice::API_BASE_URL pendiente. Se ejecutan las pruebas y la compilación; Pages se publicará cuando configures esa variable y habilites GitHub Actions en Settings > Pages.'
+        run: echo '::notice::API_BASE_URL pendiente. La interfaz solo se publica si se solicitó expresamente publish_preview; mostrará que los datos aún no están conectados.'
       - name: Compilar
         env:
-          VITE_API_BASE_URL: ${{ vars.API_BASE_URL || 'http://127.0.0.1:8000' }}
+          VITE_API_BASE_URL: ${{ vars.API_BASE_URL }}
         run: npm run build
       - uses: actions/upload-pages-artifact@v5.0.0
-        if: github.event_name != 'pull_request' && vars.API_BASE_URL != ''
+        if: github.event_name != 'pull_request' && (vars.API_BASE_URL != '' || inputs.publish_preview == true)
         with:
           path: dist
   deploy:
-    if: github.event_name != 'pull_request' && vars.API_BASE_URL != ''
+    if: github.event_name != 'pull_request' && (vars.API_BASE_URL != '' || inputs.publish_preview == true)
     needs: build
     runs-on: ubuntu-latest
     permissions:

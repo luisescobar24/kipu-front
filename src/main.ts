@@ -1,6 +1,6 @@
 import './styles.css';
 import './readability.css';
-import { api, configurationError, downloadCsv } from './api';
+import { API_BASE, api, configurationError, downloadCsv } from './api';
 import { DEFAULT_FILTERS, dateTime, escapeHtml as e, money, number, queryParams, readSaved, safeSource, validateDates } from './format';
 import type { CollectorStatus, Filters, Metadata, Page, Procurement, Summary } from './types';
 
@@ -127,8 +127,9 @@ async function refresh() {
     renderSummary(summary); renderPage(page); el('#dashboard').hidden = false;
   } catch (error) {
     if (signal.aborted) return;
-    el('#error-state').innerHTML = `<h3>No pudimos cargar la información</h3><p>${e(error instanceof Error ? error.message : 'Error inesperado.')}</p><button class="button outline" id="retry">Volver a intentar</button>`;
-    el('#error-state').hidden = false; el('#retry').onclick = () => void refresh();
+    el('#error-state').innerHTML = `<h3>${API_BASE ? 'No pudimos cargar la información' : 'Conexión con datos en preparación'}</h3><p>${e(error instanceof Error ? error.message : 'Error inesperado.')}</p>${API_BASE ? '<button class="button outline" id="retry">Volver a intentar</button>' : '<p>Puedes conocer la interfaz mientras se completa la puesta en marcha. No se muestran datos simulados.</p>'}`;
+    el('#error-state').hidden = false;
+    if (API_BASE) el('#retry').onclick = () => void refresh();
   } finally {
     if (!signal.aborted) { el('#loading').hidden = true; el<HTMLButtonElement>('#refresh').disabled = false; }
   }
