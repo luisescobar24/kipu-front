@@ -289,6 +289,6 @@ async function pollUpdates() {
     if (!document.hidden) await refresh(true);
   } finally { pollInProgress = false; }
 }
-setInterval(() => { void pollUpdates(); }, 60000);
+setInterval(() => { void pollUpdates(); }, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void pollUpdates(); });
 window.addEventListener('online', () => { void pollUpdates(); });
